@@ -15,7 +15,7 @@
 #include <stdio.h>
 #include <string.h>
 
-#include "harness.h"
+// #include "harness.h"
 #include "queue.h"
 
 /*
@@ -24,16 +24,20 @@
 */
 queue_t *q_new()
 {
-    queue_t *q =  malloc(sizeof(queue_t));
-    /* What if malloc returned NULL? */
-    q->head = NULL;
+    queue_t *q = (queue_t *) malloc(sizeof(queue_t));
+    if (q)
+        q->head = NULL;
     return q;
 }
 
 /* Free all storage used by queue */
 void q_free(queue_t *q)
 {
-    /* How about freeing the list elements and the strings? */
+    for (list_ele_t *p = q->head, *next; p; p = next) {
+        next = p->next;
+        free(p->value);
+        free(p);
+    }
     /* Free queue structure */
     free(q);
 }
@@ -47,16 +51,28 @@ void q_free(queue_t *q)
  */
 bool q_insert_head(queue_t *q, char *s)
 {
-    list_ele_t *newh;
-    /* What should you do if the q is NULL? */
-    newh = malloc(sizeof(list_ele_t));
-    /* Don't forget to allocate space for the string and copy it */
-    /* What if either call to malloc returns NULL? */
-    newh->next = q->head;
-    q->head = newh;
+    if (q == NULL)
+        return false;
+
+    list_ele_t *newh = (list_ele_t *) malloc(sizeof(list_ele_t));
+    if (newh == NULL) 
+        return false;
+
+    newh->value = (char *) calloc(strlen(s) + 1, sizeof *s);
+    if (newh->value) {
+        strcpy(newh->value, s);
+        if (q->head == NULL)
+            q->tail = newh;
+        // change queue head
+        newh->next = q->head;
+        q->head = newh;
+    }
+    else {
+        free(newh);     // free allocated list_ele_t
+        return false;
+    }
     return true;
 }
-
 
 /*
   Attempt to insert element at tail of queue.
@@ -67,10 +83,27 @@ bool q_insert_head(queue_t *q, char *s)
  */
 bool q_insert_tail(queue_t *q, char *s)
 {
-    /* You need to write the complete code for this function */
-    /* Remember: It should operate in O(1) time */
+    if (q) {
+        list_ele_t *newt = (list_ele_t *) malloc(sizeof(list_ele_t));
+        if (newt) {
+            newt->value = (char *) calloc(strlen(s) + 1, sizeof *s);
+            if (newt->value) {
+                strcpy(newt->value, s);
+                newt->next = NULL;
+                if (q->head)    // if queue is not empty i.e. tail is set
+                    q->tail = q->tail->next = newt;
+                else
+                    q->head = q->tail = newt;
+                return true;
+            }
+            // allocation failed
+            free(newt);
+        }
+    }
     return false;
 }
+
+#if 0
 
 /*
   Attempt to remove element from head of queue.
@@ -110,3 +143,4 @@ void q_reverse(queue_t *q)
     /* You need to write the code for this function */
 }
 
+#endif
