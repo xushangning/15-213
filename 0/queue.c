@@ -33,13 +33,15 @@ queue_t *q_new()
 /* Free all storage used by queue */
 void q_free(queue_t *q)
 {
-    for (list_ele_t *p = q->head, *next; p; p = next) {
-        next = p->next;
-        free(p->value);
-        free(p);
+    if (q) {
+        for (list_ele_t *p = q->head, *next; p; p = next) {
+            next = p->next;
+            free(p->value);
+            free(p);
+        }
+        /* Free queue structure */
+        free(q);
     }
-    /* Free queue structure */
-    free(q);
 }
 
 /*
