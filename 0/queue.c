@@ -25,8 +25,10 @@
 queue_t *q_new()
 {
     queue_t *q = (queue_t *) malloc(sizeof(queue_t));
-    if (q)
+    if (q) {
         q->head = NULL;
+        q->size = 0;
+    }
     return q;
 }
 
@@ -68,6 +70,7 @@ bool q_insert_head(queue_t *q, char *s)
         // change queue head
         newh->next = q->head;
         q->head = newh;
+        ++q->size;
     }
     else {
         free(newh);     // free allocated list_ele_t
@@ -96,6 +99,7 @@ bool q_insert_tail(queue_t *q, char *s)
                     q->tail = q->tail->next = newt;
                 else
                     q->head = q->tail = newt;
+                ++q->size;
                 return true;
             }
             // allocation failed
@@ -104,8 +108,6 @@ bool q_insert_tail(queue_t *q, char *s)
     }
     return false;
 }
-
-#if 0
 
 /*
   Attempt to remove element from head of queue.
@@ -117,8 +119,18 @@ bool q_insert_tail(queue_t *q, char *s)
 */
 bool q_remove_head(queue_t *q, char *sp, size_t bufsize)
 {
-    /* You need to fix up this code. */
+    if (q == NULL || q->head == NULL)
+        return false;
+
+    list_ele_t *temp_head = q->head;
+    if (sp) {
+        strncpy(sp, temp_head->value, bufsize - 1);
+        sp[bufsize - 1] = '\0';
+    }
+    free(temp_head->value);
     q->head = q->head->next;
+    free(temp_head);
+    --q->size;
     return true;
 }
 
@@ -128,9 +140,7 @@ bool q_remove_head(queue_t *q, char *sp, size_t bufsize)
  */
 int q_size(queue_t *q)
 {
-    /* You need to write the code for this function */
-    /* Remember: It should operate in O(1) time */
-    return 0;
+    return q ? q->size : 0;
 }
 
 /*
@@ -142,7 +152,15 @@ int q_size(queue_t *q)
  */
 void q_reverse(queue_t *q)
 {
-    /* You need to write the code for this function */
+    // queue pointer is null or queue has no more than one element
+    if (q == NULL || q->size <= 1)
+        return;
+    q->tail = q->head;
+    list_ele_t *p = q->head->next; 
+    q->head->next = NULL;
+    for (list_ele_t *next; p; p = next) {
+        next = p->next;
+        p->next = q->head;
+        q->head = p;
+    }
 }
-
-#endif
