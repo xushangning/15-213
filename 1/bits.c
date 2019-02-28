@@ -206,7 +206,10 @@ int negate(int x) {
  *   Rating: 3
  */
 int isAsciiDigit(int x) {
-  return 2;
+  /* mask off the lower 4 bits and test for 0x30 in the higher 4 bits. Check
+   * whether the 2nd or the 3rd bit is on when the 4th bit is on i.e. 1100 or 1010
+   */
+  return !((x & ~0xF ^ 0x30) + !(~x & 0xC) + !(~x & 0xA));
 }
 /* 
  * conditional - same as x ? y : z 
@@ -216,7 +219,11 @@ int isAsciiDigit(int x) {
  *   Rating: 3
  */
 int conditional(int x, int y, int z) {
-  return 2;
+  /* convert true and false to 0 and 0xFFFFFFFF, respectively, so that when AND
+   * with y and z, it can set one of y and z to zero.
+   */
+  int temp = ~!x + 1;       // temp == 0xFFFFFFFF if x == 0
+  return (y & ~temp) + (z & temp);
 }
 /* 
  * isLessOrEqual - if x <= y  then return 1, else return 0 
@@ -226,7 +233,15 @@ int conditional(int x, int y, int z) {
  *   Rating: 3
  */
 int isLessOrEqual(int x, int y) {
-  return 2;
+  /* use conditional the compare x with y */
+  // equals 0x80000000 if x and y has different sign, and zero otherwise
+  int hasDiffSign = (1 << 31 & x) ^ (1 << 31 & y);
+  // use the conditional function implemented above
+  int temp = ~!hasDiffSign + 1, difference = y + (~x + 1);
+  // !(x & 1 << 31) evaluates to 1 if x if is non-negative
+  // If x and y have the same sign, test the sign of their difference.
+  // Otherwise, if y is non-negative, then y is not less than x.
+  return (!(y & 1 << 31) & ~temp) + (!(difference & 1 << 31) & temp);
 }
 //4
 /* 
